@@ -1,0 +1,134 @@
+@page "/"
+@page "/login"
+@layout BlankLayout
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Iniciar sesión — AppEtiquetado</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.False"
+              Class="d-flex align-center justify-center"
+              Style="min-height: 100vh; background: #F5F9F9;">
+
+    <MudPaper Elevation="3" Class="pa-8 rounded-lg" Style="width: 100%; max-width: 440px;">
+
+        <MudStack AlignItems="AlignItems.Center" Spacing="1" Class="mb-6">
+            <MudIcon Icon="@Icons.Material.Filled.Label"
+                     Style="font-size: 3rem; color: #1A6868;" />
+            <MudText Typo="Typo.h5" Align="Align.Center"
+                     Style="font-family: Poppins, sans-serif; font-weight: 600; color: #1A6868;">
+                AppEtiquetado
+            </MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Align="Align.Center">
+                Etiquetado de productos a granel
+            </MudText>
+        </MudStack>
+
+        @if (!string.IsNullOrEmpty(_error))
+        {
+            <MudAlert Severity="Severity.Error" Class="mb-4" Dense="true">@_error</MudAlert>
+        }
+
+        <MudStack Spacing="3">
+
+            <MudTextField @bind-Value="_serverUrl"
+                          Label="URL del servidor"
+                          Variant="Variant.Outlined"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Dns"
+                          Placeholder="https://192.168.1.x:7155"
+                          HelperText="Dirección del servidor Cleeny en la red local"
+                          Disabled="@_loading"
+                          AutoFocus="true" />
+
+            <MudTextField @bind-Value="_username"
+                          Label="Usuario"
+                          Variant="Variant.Outlined"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Person"
+                          Disabled="@_loading" />
+
+            <MudTextField @bind-Value="_password"
+                          Label="Contraseña"
+                          Variant="Variant.Outlined"
+                          InputType="@(_showPassword ? InputType.Text : InputType.Password)"
+                          Adornment="Adornment.End"
+                          AdornmentIcon="@(_showPassword ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+                          OnAdornmentClick="@(() => _showPassword = !_showPassword)"
+                          Disabled="@_loading"
+                          OnKeyDown="OnKeyDown" />
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Size="Size.Large"
+                       FullWidth="true"
+                       OnClick="LoginAsync"
+                       Disabled="@(!CanSubmit || _loading)">
+                @if (_loading)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                    <span>Conectando...</span>
+                }
+                else
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.Login" Class="mr-2" />
+                    <span>Iniciar sesión</span>
+                }
+            </MudButton>
+
+        </MudStack>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private string _serverUrl = string.Empty;
+    private string _username = string.Empty;
+    private string _password = string.Empty;
+    private string _error = string.Empty;
+    private bool _loading;
+    private bool _showPassword;
+
+    private bool CanSubmit =>
+        !string.IsNullOrWhiteSpace(_serverUrl) &&
+        !string.IsNullOrWhiteSpace(_username) &&
+        !string.IsNullOrWhiteSpace(_password);
+
+    protected override void OnInitialized()
+    {
+        if (AuthService.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/etiquetado", replace: true);
+            return;
+        }
+        _serverUrl = AuthService.ServerUrl;
+    }
+
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && CanSubmit && !_loading)
+            await LoginAsync();
+    }
+
+    private async Task LoginAsync()
+    {
+        _error = string.Empty;
+        _loading = true;
+        try
+        {
+            var result = await AuthService.LoginAsync(_serverUrl.Trim(), _username.Trim(), _password);
+            if (result.Success)
+                Navigation.NavigateTo("/etiquetado", replace: true);
+            else
+                _error = result.Error ?? "Usuario o contraseña incorrectos.";
+        }
+        catch (Exception ex)
+        {
+            _error = $"No se pudo conectar: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

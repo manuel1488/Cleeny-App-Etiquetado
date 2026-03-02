@@ -1,0 +1,185 @@
+@page "/etiquetado"
+@inject AuthService AuthService
+@inject LabelService LabelService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Etiquetado — AppEtiquetado</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="pa-4">
+    <MudGrid Justify="Justify.Center">
+        <MudItem xs="12">
+
+            <MudPaper Elevation="2" Class="pa-5 rounded-lg">
+
+                <MudText Typo="Typo.h5" GutterBottom="true"
+                         Style="font-family: Poppins, sans-serif; font-weight: 600; color: #1A6868;">
+                    Etiquetado a granel
+                </MudText>
+                <MudDivider Class="mb-5" />
+
+                <MudStack Spacing="3">
+
+                    <MudAutocomplete T="ProductDto"
+                                     Label="Buscar producto"
+                                     Value="_product"
+                                     ValueChanged="OnProductChanged"
+                                     SearchFunc="SearchAsync"
+                                     ToStringFunc="@(p => p?.ToString() ?? string.Empty)"
+                                     Variant="Variant.Outlined"
+                                     Adornment="Adornment.Start"
+                                     AdornmentIcon="@Icons.Material.Filled.Search"
+                                     ResetValueOnEmptyText="true"
+                                     Clearable="true"
+                                     DebounceInterval="300"
+                                     MinCharacters="2"
+                                     NoItemsFoundText="Sin resultados"
+                                     Margin="Margin.Dense" />
+
+                    @if (_product is not null)
+                    {
+                        <MudNumericField @bind-Value="_quantity"
+                                         @ref="_quantityField"
+                                         Label="Cantidad"
+                                         Variant="Variant.Outlined"
+                                         Min="0.001m"
+                                         Step="0.100m"
+                                         Format="0.###"
+                                         Adornment="Adornment.End"
+                                         AdornmentText="@_product.UnitMeasureCode"
+                                         Margin="Margin.Dense" />
+
+                        <MudTextField Value="@_product.Price.ToString("C2")"
+                                      Label="Precio unitario"
+                                      Variant="Variant.Outlined"
+                                      ReadOnly="true"
+                                      Margin="Margin.Dense" />
+
+                        <MudPaper Elevation="0" Class="pa-4 rounded"
+                                  Style="background-color: #e8f4f4;">
+                            <MudStack Row="true"
+                                      Justify="Justify.SpaceBetween"
+                                      AlignItems="AlignItems.Center">
+                                <MudText Typo="Typo.body1" Style="font-weight: 500;">
+                                    Total a cobrar
+                                </MudText>
+                                <MudText Typo="Typo.h5" Color="Color.Primary"
+                                         Style="font-family: Poppins, sans-serif; font-weight: 700;">
+                                    @TotalPrice.ToString("C2")
+                                </MudText>
+                            </MudStack>
+                        </MudPaper>
+                    }
+
+                    <MudStack Row="true" Spacing="2">
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Size="Size.Large"
+                                   FullWidth="true"
+                                   StartIcon="@Icons.Material.Filled.Print"
+                                   OnClick="PrintAsync"
+                                   Disabled="@(!CanPrint || _printing)">
+                            @if (_printing)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                <span>Generando...</span>
+                            }
+                            else
+                            {
+                                <span>Imprimir etiqueta</span>
+                            }
+                        </MudButton>
+
+                        <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                       Variant="Variant.Outlined"
+                                       Color="Color.Default"
+                                       Size="Size.Large"
+                                       OnClick="Reset"
+                                       title="Limpiar formulario" />
+                    </MudStack>
+
+                </MudStack>
+            </MudPaper>
+
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private ProductDto? _product;
+    private decimal _quantity;
+    private bool _printing;
+    private MudNumericField<decimal>? _quantityField;
+
+    private decimal TotalPrice => Math.Round((_product?.Price ?? 0m) * _quantity, 2);
+    private bool CanPrint => _product is not null && _quantity > 0;
+
+    protected override void OnInitialized()
+    {
+        if (!AuthService.IsAuthenticated)
+            Navigation.NavigateTo("/login", replace: true);
+    }
+
+    private async Task OnProductChanged(ProductDto? product)
+    {
+        _product = product;
+        _quantity = 0;
+        if (product is not null && _quantityField is not null)
+            await _quantityField.FocusAsync();
+    }
+
+    private async Task<IEnumerable<ProductDto>> SearchAsync(string value, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value.Length < 2)
+            return [];
+        try
+        {
+            return await LabelService.SearchProductsAsync(value, ct);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error al buscar: {ex.Message}", Severity.Warning);
+            return [];
+        }
+    }
+
+    private async Task PrintAsync()
+    {
+        if (_product is null || _quantity <= 0) return;
+
+        _printing = true;
+        try
+        {
+            var dto = new CreateBulkLabelJobDto
+            {
+                ProductId = _product.Id,
+                Quantity = _quantity,
+                UnitMeasureCode = _product.UnitMeasureCode,
+                UnitPrice = _product.Price,
+                TotalPrice = TotalPrice,
+                LabelCount = 1,
+            };
+
+            var job = await LabelService.CreateLabelJobAsync(dto);
+            var pdfUrl = LabelService.GetPdfUrl(job.Id);
+
+            await Launcher.OpenAsync(new Uri(pdfUrl));
+            Snackbar.Add($"Etiqueta generada: {job.ProductName}", Severity.Success);
+            Reset();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error al generar etiqueta: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _printing = false;
+        }
+    }
+
+    private void Reset()
+    {
+        _product = null;
+        _quantity = 0;
+    }
+}

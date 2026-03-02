@@ -4,7 +4,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**AppEtiquetado** is a cross-platform .NET MAUI + Blazor hybrid application targeting Android, iOS, macOS (Catalyst), and Windows. It embeds Blazor components inside a native MAUI shell via `BlazorWebView`.
+**AppEtiquetado** is a cross-platform .NET MAUI + Blazor hybrid tablet application for labeling bulk products. It is a companion to the **Cleeny** POS system (`C:\repos\Cleeny`): it authenticates against Cleeny's REST API, searches the product catalog, and generates bulk product labels (PDF via Cleeny's label service).
+
+**Cleeny API endpoints used:**
+- `POST /api/Auth/Login` — form-encoded (`Input.UserName`, `Input.Password`); responds with 302 redirect
+- `GET /api/products?search=&pageSize=20&isActive=true` — product search
+- `POST /api/labels/bulk` — create label job (`CreateBulkLabelJobDto`)
+- `GET /api/labels/bulk/{id}/pdf` — retrieve label PDF
+
+**Key design decisions:**
+- `AppApiService` wraps `HttpClient` with `CookieContainer` to persist Cleeny's auth cookie across requests
+- All three services (`AppApiService`, `AuthService`, `LabelService`) are registered as **singletons** to survive page navigation
+- `BlankLayout` is used for the login page (no AppBar); `MainLayout` is used for authenticated pages
+- In `DEBUG` builds, SSL certificate validation is bypassed to allow Cleeny's dev cert
+- The Cleeny server URL is persisted in `Preferences` (MAUI cross-platform settings)
+
+**Cleeny theme colors (replicated in `AppTheme.cs`):**
+- Primary: `#1A6868` (teal) | Secondary: `#7B3FA0` (purple)
+- Font: Poppins (headings), Roboto (body)
 
 ## VS Code
 
