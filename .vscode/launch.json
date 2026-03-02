@@ -1,0 +1,26 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug: Android",
+      "type": "dotnet",
+      "request": "launch",
+      "projectPath": "${workspaceFolder}/AppEtiquetado/AppEtiquetado.csproj",
+      "targetFramework": "net10.0-android"
+    },
+    {
+      "name": "Debug: Windows",
+      "type": "dotnet",
+      "request": "launch",
+      "projectPath": "${workspaceFolder}/AppEtiquetado/AppEtiquetado.csproj",
+      "targetFramework": "net10.0-windows10.0.19041.0"
+    },
+    {
+      "name": "Debug: iOS Simulator",
+      "type": "dotnet",
+      "request": "launch",
+      "projectPath": "${workspaceFolder}/AppEtiquetado/AppEtiquetado.csproj",
+      "targetFramework": "net10.0-ios"
+    }
+  ]
+}

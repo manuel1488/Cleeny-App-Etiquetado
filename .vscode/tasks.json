@@ -1,0 +1,47 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build: Android",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/AppEtiquetado/AppEtiquetado.csproj",
+        "-f", "net10.0-android",
+        "-c", "Debug"
+      ],
+      "group": "build",
+      "presentation": { "reveal": "silent" },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "build: Windows",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/AppEtiquetado/AppEtiquetado.csproj",
+        "-f", "net10.0-windows10.0.19041.0",
+        "-c", "Debug"
+      ],
+      "group": "build",
+      "presentation": { "reveal": "silent" },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "build: iOS",
+      "command": "dotnet",
+      "type": "process",
+      "args": [
+        "build",
+        "${workspaceFolder}/AppEtiquetado/AppEtiquetado.csproj",
+        "-f", "net10.0-ios",
+        "-c", "Debug"
+      ],
+      "group": "build",
+      "presentation": { "reveal": "silent" },
+      "problemMatcher": "$msCompile"
+    }
+  ]
+}
