@@ -1,0 +1,126 @@
+@page "/ajustes"
+@inject AuthService AuthService
+@inject AppApiService ApiService
+@inject ISnackbar Snackbar
+
+<PageTitle>Configuración — @AppConfig.AppName</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="pa-4">
+    <MudStack Spacing="4">
+
+        <MudText Typo="Typo.h6"
+                 Style="font-family: Poppins, sans-serif; font-weight: 600; color: #1A6868;">
+            Configuración
+        </MudText>
+
+        @* ── Cleeny server ───────────────────────────────────────────── *@
+        <MudPaper Elevation="2" Class="pa-4 rounded-lg">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-3">
+                <MudIcon Icon="@Icons.Material.Filled.Dns" Style="color: #1A6868;" />
+                <MudText Typo="Typo.subtitle2" Style="font-weight: 600;">
+                    Servidor Cleeny
+                </MudText>
+            </MudStack>
+
+            <MudStack Spacing="2">
+                <MudTextField @bind-Value="_serverUrl"
+                              Label="URL del servidor"
+                              Variant="Variant.Outlined"
+                              Placeholder="https://192.168.1.x:7155"
+                              Dense="true"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Link" />
+
+                <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.CloudDone"
+                               OnClick="VerifyConnectionAsync"
+                               Disabled="@(_verifying || string.IsNullOrWhiteSpace(_serverUrl))">
+                        Verificar conexión
+                    </MudButton>
+
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Save"
+                               OnClick="SaveServerUrl"
+                               Disabled="@string.IsNullOrWhiteSpace(_serverUrl)">
+                        Guardar
+                    </MudButton>
+
+                    @if (_verifying)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Primary" />
+                    }
+                    else if (_connectionStatus is not null)
+                    {
+                        <MudChip T="string"
+                                 Color="@(_connectionStatus == Status.Ok ? Color.Success : Color.Error)"
+                                 Size="Size.Small"
+                                 Icon="@(_connectionStatus == Status.Ok ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Error)">
+                            @_connectionMessage
+                        </MudChip>
+                    }
+                </MudStack>
+            </MudStack>
+        </MudPaper>
+
+    </MudStack>
+</MudContainer>
+
+@code {
+    private enum Status { Ok, Error }
+
+    private string _serverUrl = string.Empty;
+    private bool _verifying;
+    private Status? _connectionStatus;
+    private string _connectionMessage = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        // TODO: restore auth check when login flow is enabled
+        // if (!AuthService.IsAuthenticated) Navigation.NavigateTo("/login", replace: true);
+        _serverUrl = AuthService.ServerUrl;
+    }
+
+    private void SaveServerUrl()
+    {
+        var url = _serverUrl.Trim().TrimEnd('/');
+        Preferences.Set("server_url", url);
+        ApiService.SetBaseUrl(url);
+        _connectionStatus = null;
+        Snackbar.Add("URL del servidor guardada.", Severity.Success);
+    }
+
+    private async Task VerifyConnectionAsync()
+    {
+        _verifying = true;
+        _connectionStatus = null;
+        try
+        {
+            var testUrl = _serverUrl.Trim().TrimEnd('/') + "/";
+            using var client = new System.Net.Http.HttpClient(new System.Net.Http.HttpClientHandler
+            {
+                AllowAutoRedirect = false,
+#if DEBUG
+                ServerCertificateCustomValidationCallback = (_, _, _, _) => true,
+#endif
+            }) { Timeout = TimeSpan.FromSeconds(10) };
+
+            var response = await client.GetAsync(testUrl);
+            // Any HTTP response (200, 302 redirect to login, etc.) means the server is reachable
+            _connectionStatus = Status.Ok;
+            _connectionMessage = $"Conectado ({(int)response.StatusCode})";
+        }
+        catch (Exception ex)
+        {
+            _connectionStatus = Status.Error;
+            _connectionMessage = ex.InnerException?.Message ?? ex.Message;
+        }
+        finally
+        {
+            _verifying = false;
+        }
+    }
+
+}

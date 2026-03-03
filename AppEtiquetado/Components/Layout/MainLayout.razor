@@ -8,16 +8,19 @@
 <MudSnackbarProvider />
 
 <MudLayout>
+
     <MudAppBar Elevation="1" Color="Color.Primary" Dense="true">
-        <MudIcon Icon="@Icons.Material.Filled.Label" Class="mr-2" />
-        <MudText Typo="Typo.h6"
-                 Style="font-family: Poppins, sans-serif; font-weight: 600;">
-            AppEtiquetado
+        <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                       Color="Color.Inherit"
+                       Edge="Edge.Start"
+                       OnClick="@(() => _drawerOpen = !_drawerOpen)" />
+        <MudText Typo="Typo.h6" Style="font-family: Poppins, sans-serif; font-weight: 600;">
+            @AppConfig.AppName
         </MudText>
         <MudSpacer />
         @if (AuthService.IsAuthenticated)
         {
-            <MudText Typo="Typo.body2" Class="mr-3 d-none d-sm-flex">
+            <MudText Typo="Typo.body2" Class="mr-2 d-none d-md-flex" Style="opacity: .8;">
                 @AuthService.UserName
             </MudText>
             <MudIconButton Icon="@Icons.Material.Filled.Logout"
@@ -25,18 +28,56 @@
                            OnClick="LogoutAsync"
                            title="Cerrar sesión" />
         }
-        <MudIconButton Icon="@Icons.Material.Filled.Print"
-                       Color="Color.Inherit"
-                       Href="/conexion-impresora"
-                       title="Test de impresora" />
     </MudAppBar>
+
+    <MudDrawer @bind-Open="_drawerOpen"
+               Elevation="2"
+               Variant="DrawerVariant.Temporary"
+               Overlay="true"
+               OverlayAutoClose="true">
+        <MudDrawerHeader>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                <MudIcon Icon="@Icons.Material.Filled.Label" Style="color: #1A6868;" />
+                <MudText Typo="Typo.subtitle1"
+                         Style="font-family: Poppins, sans-serif; font-weight: 600; color: #1A6868;">
+                    @AppConfig.AppName
+                </MudText>
+            </MudStack>
+        </MudDrawerHeader>
+
+        <MudNavMenu>
+            <MudNavLink Href="/etiquetado"
+                        Icon="@Icons.Material.Filled.Label"
+                        Match="NavLinkMatch.Prefix"
+                        OnClick="CloseDrawer">
+                Etiquetar
+            </MudNavLink>
+            <MudNavLink Href="/conexion-impresora"
+                        Icon="@Icons.Material.Filled.Print"
+                        Match="NavLinkMatch.Prefix"
+                        OnClick="CloseDrawer">
+                Impresora
+            </MudNavLink>
+            <MudNavLink Href="/ajustes"
+                        Icon="@Icons.Material.Filled.Settings"
+                        Match="NavLinkMatch.Prefix"
+                        OnClick="CloseDrawer">
+                Configuración
+            </MudNavLink>
+        </MudNavMenu>
+    </MudDrawer>
 
     <MudMainContent>
         @Body
     </MudMainContent>
+
 </MudLayout>
 
 @code {
+    private bool _drawerOpen;
+
+    private void CloseDrawer() => _drawerOpen = false;
+
     private async Task LogoutAsync()
     {
         await AuthService.LogoutAsync();

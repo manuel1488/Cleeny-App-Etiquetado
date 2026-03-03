@@ -14,7 +14,7 @@
     <Nullable>enable</Nullable>
     <MauiXamlInflator>SourceGen</MauiXamlInflator>
 
-    <ApplicationTitle>AppEtiquetado</ApplicationTitle>
+    <ApplicationTitle>Cleeny</ApplicationTitle>
     <ApplicationId>com.companyname.appetiquetado</ApplicationId>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <ApplicationVersion>1</ApplicationVersion>

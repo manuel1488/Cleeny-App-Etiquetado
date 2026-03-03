@@ -119,7 +119,7 @@ public class BrotherPrinterService : IBrotherPrinterService
         canvas.DrawText("PRUEBA DE IMPRESIÓN", W / 2f, H * 0.38f, paint);
 
         paint.TextSize = 40f;
-        canvas.DrawText("AppEtiquetado", W / 2f, H * 0.60f, paint);
+        canvas.DrawText(AppConfig.AppName, W / 2f, H * 0.60f, paint);
 
         paint.TextSize = 28f;
         paint.Color = global::Android.Graphics.Color.DarkGray;

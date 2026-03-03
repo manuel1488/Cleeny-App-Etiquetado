@@ -1,9 +1,8 @@
 @page "/conexion-impresora"
-@layout BlankLayout
 @inject IBrotherPrinterService? PrinterService
 @inject ISnackbar Snackbar
 
-<PageTitle>Conexión de impresora — AppEtiquetado</PageTitle>
+<PageTitle>Conexión de impresora — @AppConfig.AppName</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.Small" Class="pa-4" Style="min-height: 100vh; background: #F5F9F9;">
     <MudStack Spacing="4">
@@ -149,15 +148,6 @@
             }
         }
 
-        @* ── Login link ──────────────────────────────────────────────── *@
-        <MudButton Variant="Variant.Text"
-                   Color="Color.Default"
-                   FullWidth="true"
-                   StartIcon="@Icons.Material.Filled.Login"
-                   Href="/login">
-            Ir al login
-        </MudButton>
-
     </MudStack>
 </MudContainer>
 
@@ -217,7 +207,7 @@
             _hasSearched = true;
             _devices = [];
             Snackbar.Add(
-                "Permiso Bluetooth denegado. Ve a Ajustes → Apps → AppEtiquetado → Permisos.",
+                $"Permiso Bluetooth denegado. Ve a Ajustes → Apps → {AppConfig.AppName} → Permisos.",
                 Severity.Error);
             return;
         }

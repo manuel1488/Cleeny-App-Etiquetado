@@ -4,7 +4,7 @@
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 
-<PageTitle>Etiquetado — AppEtiquetado</PageTitle>
+<PageTitle>Etiquetado — @AppConfig.AppName</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.Small" Class="pa-4">
     <MudGrid Justify="Justify.Center">
@@ -116,8 +116,9 @@
 
     protected override void OnInitialized()
     {
-        if (!AuthService.IsAuthenticated)
-            Navigation.NavigateTo("/login", replace: true);
+        // TODO: restore auth check when login flow is enabled
+        // if (!AuthService.IsAuthenticated)
+        //     Navigation.NavigateTo("/login", replace: true);
     }
 
     private async Task OnProductChanged(ProductDto? product)

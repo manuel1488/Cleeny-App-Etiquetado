@@ -3,7 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:AppEtiquetado"
              xmlns:components="clr-namespace:AppEtiquetado.Components"
-             x:Class="AppEtiquetado.MainPage">
+             x:Class="AppEtiquetado.MainPage"
+    BackgroundColor="#1A6868">
 
     <BlazorWebView x:Name="blazorWebView" HostPage="wwwroot/index.html">
         <BlazorWebView.RootComponents>
