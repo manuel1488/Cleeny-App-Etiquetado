@@ -8,7 +8,7 @@
 <MudContainer MaxWidth="MaxWidth.Small" Class="pa-4" Style="min-height: 100vh; background: #F5F9F9;">
     <MudStack Spacing="4">
 
-        @* ── Encabezado ────────────────────────────────────────────── *@
+        @* ── Header ─────────────────────────────────────────────────── *@
         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-2">
             <MudIcon Icon="@Icons.Material.Filled.Print" Style="color: #1A6868; font-size: 2rem;" />
             <MudStack Spacing="0">
@@ -30,7 +30,7 @@
         }
         else
         {
-            @* ── 1. Dispositivos emparejados ───────────────────────────── *@
+            @* ── 1. Paired devices ──────────────────────────────────────── *@
             <MudPaper Elevation="2" Class="pa-4 rounded-lg">
                 <MudText Typo="Typo.subtitle2" Style="font-weight: 600;" GutterBottom="true">
                     1. Seleccionar impresora
@@ -67,7 +67,7 @@
                 }
                 else
                 {
-                    <MudRadioGroup @bind-Value="_selectedAddress">
+                    <MudRadioGroup T="string" Value="_selectedAddress" ValueChanged="OnDeviceSelected">
                         @foreach (var d in _devices)
                         {
                             <MudRadio Value="@d.Address" Color="Color.Primary">
@@ -81,23 +81,35 @@
                 }
             </MudPaper>
 
-            @* ── 2. Tamaño de etiqueta ──────────────────────────────────── *@
+            @* ── 2. Label size ───────────────────────────────────────────── *@
             <MudPaper Elevation="2" Class="pa-4 rounded-lg">
                 <MudText Typo="Typo.subtitle2" Style="font-weight: 600;" GutterBottom="true">
                     2. Cinta instalada
                 </MudText>
-                <MudSelect @bind-Value="_labelSize"
-                           Label="Tamaño de etiqueta"
-                           Variant="Variant.Outlined"
-                           Dense="true">
-                    @foreach (var ls in _labelSizes)
-                    {
-                        <MudSelectItem Value="@ls.Key">@ls.Value</MudSelectItem>
-                    }
-                </MudSelect>
+                <MudStack Spacing="3">
+                    <MudSelect T="string" Value="_labelSize" ValueChanged="OnLabelSizeChanged"
+                               Label="Tamaño de etiqueta"
+                               Variant="Variant.Outlined"
+                               Dense="true">
+                        @foreach (var ls in _labelSizes)
+                        {
+                            <MudSelectItem Value="@ls.Key">@ls.Value</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudNumericField T="int"
+                                     Value="_labelHeightMm"
+                                     ValueChanged="OnHeightChanged"
+                                     Label="Altura de etiqueta (mm)"
+                                     Variant="Variant.Outlined"
+                                     Dense="true"
+                                     Min="30"
+                                     Max="300"
+                                     Step="5"
+                                     HelperText="Para cinta continua. Se guarda en el dispositivo." />
+                </MudStack>
             </MudPaper>
 
-            @* ── 3. Imprimir ────────────────────────────────────────────── *@
+            @* ── 3. Print ────────────────────────────────────────────────── *@
             <MudButton Variant="Variant.Filled"
                        Color="Color.Primary"
                        Size="Size.Large"
@@ -116,7 +128,7 @@
                 }
             </MudButton>
 
-            @* ── Resultado ──────────────────────────────────────────────── *@
+            @* ── Result ──────────────────────────────────────────────────── *@
             @if (!string.IsNullOrEmpty(_log))
             {
                 <MudPaper Elevation="0" Class="pa-3 rounded"
@@ -137,7 +149,7 @@
             }
         }
 
-        @* ── Ir al login ─────────────────────────────────────────────── *@
+        @* ── Login link ──────────────────────────────────────────────── *@
         <MudButton Variant="Variant.Text"
                    Color="Color.Default"
                    FullWidth="true"
@@ -153,11 +165,37 @@
     private List<PrinterDevice> _devices = [];
     private string _selectedAddress = string.Empty;
     private string _labelSize = "DieCutW62H100";
+    private int _labelHeightMm = 50;
     private bool _scanning;
     private bool _printing;
     private bool _hasSearched;
     private string _log = string.Empty;
     private bool _lastSuccess;
+
+    protected override void OnInitialized()
+    {
+        _labelSize     = Preferences.Get("label_size",      "DieCutW62H100");
+        _labelHeightMm = Preferences.Get("label_height_mm", 50);
+        _selectedAddress = Preferences.Get("printer_address", string.Empty);
+    }
+
+    private void OnDeviceSelected(string address)
+    {
+        _selectedAddress = address;
+        Preferences.Set("printer_address", address);
+    }
+
+    private void OnLabelSizeChanged(string size)
+    {
+        _labelSize = size;
+        Preferences.Set("label_size", size);
+    }
+
+    private void OnHeightChanged(int value)
+    {
+        _labelHeightMm = value;
+        Preferences.Set("label_height_mm", value);
+    }
 
     private static readonly Dictionary<string, string> _labelSizes = new()
     {
@@ -205,7 +243,7 @@
         _log = string.Empty;
         try
         {
-            var result = await PrinterService.PrintTestAsync(_selectedAddress, _labelSize);
+            var result = await PrinterService.PrintTestAsync(_selectedAddress, _labelSize, _labelHeightMm);
             _lastSuccess = result.Success;
             _log = result.Message;
             Snackbar.Add(

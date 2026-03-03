@@ -25,32 +25,33 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Brother Print SDK (Android)
 
-**SDK versión:** 4.13.0 (`BrotherPrintLibrary.aar`)
-**AAR ubicación en proyecto:** `AppEtiquetado/Platforms/Android/libs/BrotherPrintLibrary.aar`
-**Fuente original:** `C:\Users\Manuel Alfaro\Downloads\bpsdkaall4130\bpsdkaall4130\bpsdka4130\bpsdka4130\libs\`
+**SDK version:** 4.13.0 (`BrotherPrintLibrary.aar`)
+**AAR path in project:** `AppEtiquetado/Platforms/Android/libs/BrotherPrintLibrary.aar`
+**Original source:** `C:\Users\Manuel Alfaro\Downloads\bpsdkaall4130\bpsdkaall4130\bpsdka4130\bpsdka4130\libs\`
 
-El AAR se incluye vía `<AndroidLibrary>` en el `.csproj` (solo para `net10.0-android`). Las transformaciones de binding están en `Transforms/Metadata.xml`.
+The AAR is included via `<AndroidLibrary>` in the `.csproj` (Android target only). Binding transforms are in `Transforms/Metadata.xml`.
 
-**Clases clave** (namespace C#: `Com.Brother.Sdk.Lmprinter`):
-- `Channel.NewBluetoothChannel(address, adapter)` — conexión BT clásica
-- `Channel.NewBluetoothLowEnergyChannel(address, context, adapter)` — BLE
+**Key classes** (C# namespace: `Com.Brother.Sdk.Lmprinter`):
+- `Channel.NewBluetoothChannel(address, adapter)` — classic BT connection
 - `PrinterDriverGenerator.OpenChannel(channel)` → `PrinterDriverGenerateResult`
-- `QLPrintSettings(PrinterModel.QL_1110NWB)` — settings para QL-1110NWB
+- `QLPrintSettings(PrinterModel.Ql1110nwb)` — settings for QL-1110NWB
 - `driver.PrintImage(bitmap, settings)` → `PrintError`
 
-**Advertencia:** Los nombres de enum generados por el binding pueden diferir. Verificar al compilar:
-- `PrinterModel.QL_1110NWB`
-- `QLPrintSettings.LabelSize.DK_62X100` (ajustar según cinta instalada)
-- `OpenChannelError.ErrorCode.NoError`
-- `PrintError.ErrorCode.NoError`
+**Verified generated enum names** (binding uses PascalCase from Java names):
+- `PrinterModel.Ql1110nwb`
+- `QLPrintSettings.LabelSize.DieCutW62H100`, `.RollW62`, `.DieCutW103H164`, `.DieCutW62H29`, `.DieCutW62H60`, `.DieCutW102H152`
+- `IPrintImageSettings.ScaleMode.FitPageAspect`
+- `OpenChannelError.ErrorCode.NoError` / `PrintError.ErrorCode.NoError`
 
-**Página de test:** `/printer-test` (sin autenticación, usa `BlankLayout`)
+**Print pixel density (empirical, QL-1110NWB):** 200 px → 22.93 mm → `PxPerMm = 8.725`. Minimum print height: 25.40 mm (230 px). Label height is configurable and persisted via `Preferences` key `label_height_mm`.
+
+**Printer connection test page:** `/conexion-impresora` (no auth required, uses `BlankLayout`). App startup is set to this page via `blazorWebView.StartPath` in `MainPage.xaml.cs`.
 
 ## VS Code
 
-Extensiones requeridas (en `.vscode/extensions.json`): **ms-dotnettools.dotnet-maui**, **ms-dotnettools.csdevkit**, **ms-dotnettools.csharp**.
+Required extensions (see `.vscode/extensions.json`): **ms-dotnettools.dotnet-maui**, **ms-dotnettools.csdevkit**, **ms-dotnettools.csharp**.
 
-Las configuraciones de depuración en `.vscode/launch.json` permiten depurar en Android, Windows e iOS directamente desde VS Code con F5 (requiere la extensión MAUI).
+Debug configurations in `.vscode/launch.json` support Android (emulator and USB device), Windows, and iOS. Use `Ctrl+Shift+P` → `MAUI: Select Device` to pick the target before pressing F5. ADB is at `C:\Program Files (x86)\Android\android-sdk\platform-tools\`.
 
 ## Build Commands
 
@@ -99,6 +100,7 @@ Static assets (CSS, JS, images) belong in `wwwroot/`. Component-scoped styles us
 
 ## Key Conventions
 
+- **Language:** Code, comments, and documentation in English. UI text visible to end users in Spanish.
 - **Nullable reference types** are enabled — always handle nullability.
 - **Implicit usings** are enabled — common namespaces don't need explicit `using` statements.
 - **XAML Source Generation** (`MauiXamlInflator=SourceGen`) is active for faster builds.

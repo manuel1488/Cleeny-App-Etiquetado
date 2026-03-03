@@ -3,17 +3,18 @@ namespace AppEtiquetado.Services;
 public interface IBrotherPrinterService
 {
     /// <summary>
-    /// Devuelve los dispositivos Bluetooth ya emparejados en el sistema.
-    /// El usuario debe emparejar la impresora desde Ajustes de Android antes de usar la app.
+    /// Returns Bluetooth devices already paired on the system.
+    /// The user must pair the printer from Android Settings before using the app.
     /// </summary>
     List<PrinterDevice> GetPairedPrinters();
 
     /// <summary>
-    /// Imprime una etiqueta de prueba en la impresora con la dirección indicada.
+    /// Prints a test label on the printer at the given address.
     /// </summary>
     Task<PrintResult> PrintTestAsync(
         string address,
-        string labelSize = "DK_62X100",
+        string labelSize = "DieCutW62H100",
+        int labelHeightMm = 50,
         CancellationToken ct = default);
 }
 

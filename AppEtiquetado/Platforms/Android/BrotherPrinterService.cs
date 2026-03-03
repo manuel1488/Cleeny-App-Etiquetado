@@ -35,6 +35,7 @@ public class BrotherPrinterService : IBrotherPrinterService
     public async Task<PrintResult> PrintTestAsync(
         string address,
         string labelSize = "DieCutW62H100",
+        int labelHeightMm = 50,
         CancellationToken ct = default)
     {
         return await Task.Run(() =>
@@ -60,7 +61,7 @@ public class BrotherPrinterService : IBrotherPrinterService
                     settings.ScaleMode = IPrintImageSettings.ScaleMode.FitPageAspect;
                     settings.WorkPath = context.CacheDir?.AbsolutePath ?? "/data/local/tmp";
 
-                    var bitmap = CreateTestBitmap();
+                    var bitmap = CreateTestBitmap(labelHeightMm);
                     var printError = driver.PrintImage(bitmap, settings);
                     bitmap.Recycle();
 
@@ -96,10 +97,13 @@ public class BrotherPrinterService : IBrotherPrinterService
     private static QLPrintSettings.LabelSize? ParseLabelSize(string name) =>
         _labelSizeMap.TryGetValue(name, out var size) ? size : QLPrintSettings.LabelSize.DieCutW62H100;
 
-    private static global::Android.Graphics.Bitmap CreateTestBitmap()
+    // Empirical factor measured on QL-1110NWB: 200 px → 22.93 mm ≈ 8.725 px/mm
+    private const double PxPerMm = 8.725;
+
+    private static global::Android.Graphics.Bitmap CreateTestBitmap(int heightMm)
     {
         const int W = 696;
-        const int H = 400; // mínimo ~45 mm a la resolución efectiva de la QL-1110NWB (> 25.40 mm requeridos)
+        int H = Math.Max((int)(heightMm * PxPerMm), 230); // 230 px ≈ 26.4 mm, above the 25.40 mm minimum
 
         var bmp = global::Android.Graphics.Bitmap.CreateBitmap(
             W, H, global::Android.Graphics.Bitmap.Config.Rgb565!)!;
@@ -112,14 +116,14 @@ public class BrotherPrinterService : IBrotherPrinterService
 
         paint.Color = global::Android.Graphics.Color.Black;
         paint.TextSize = 64f;
-        canvas.DrawText("PRUEBA DE IMPRESIÓN", W / 2f, 150f, paint);
+        canvas.DrawText("PRUEBA DE IMPRESIÓN", W / 2f, H * 0.38f, paint);
 
         paint.TextSize = 40f;
-        canvas.DrawText("AppEtiquetado", W / 2f, 240f, paint);
+        canvas.DrawText("AppEtiquetado", W / 2f, H * 0.60f, paint);
 
         paint.TextSize = 28f;
         paint.Color = global::Android.Graphics.Color.DarkGray;
-        canvas.DrawText(DateTime.Now.ToString("dd/MM/yyyy  HH:mm:ss"), W / 2f, 310f, paint);
+        canvas.DrawText(DateTime.Now.ToString("dd/MM/yyyy  HH:mm:ss"), W / 2f, H * 0.78f, paint);
 
         return bmp;
     }
