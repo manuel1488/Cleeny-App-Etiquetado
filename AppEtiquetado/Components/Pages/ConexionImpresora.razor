@@ -1,0 +1,226 @@
+@page "/conexion-impresora"
+@layout BlankLayout
+@inject IBrotherPrinterService? PrinterService
+@inject ISnackbar Snackbar
+
+<PageTitle>Conexión de impresora — AppEtiquetado</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="pa-4" Style="min-height: 100vh; background: #F5F9F9;">
+    <MudStack Spacing="4">
+
+        @* ── Encabezado ────────────────────────────────────────────── *@
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mt-2">
+            <MudIcon Icon="@Icons.Material.Filled.Print" Style="color: #1A6868; font-size: 2rem;" />
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.h6"
+                         Style="font-family: Poppins, sans-serif; font-weight: 600; color: #1A6868;">
+                    Conexión de impresora
+                </MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    Brother QL-1110NWB — prueba de conexión Bluetooth
+                </MudText>
+            </MudStack>
+        </MudStack>
+
+        @if (PrinterService is null)
+        {
+            <MudAlert Severity="Severity.Warning">
+                El servicio de impresión no está disponible en esta plataforma. Solo funciona en Android.
+            </MudAlert>
+        }
+        else
+        {
+            @* ── 1. Dispositivos emparejados ───────────────────────────── *@
+            <MudPaper Elevation="2" Class="pa-4 rounded-lg">
+                <MudText Typo="Typo.subtitle2" Style="font-weight: 600;" GutterBottom="true">
+                    1. Seleccionar impresora
+                </MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-3 d-block">
+                    Empareja la QL-1110NWB por Bluetooth en Ajustes → Bluetooth antes de continuar.
+                </MudText>
+
+                <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mb-3">
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Refresh"
+                               OnClick="RefreshDevices"
+                               Disabled="@_scanning">
+                        Buscar dispositivos
+                    </MudButton>
+                    @if (_scanning)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Primary" />
+                    }
+                </MudStack>
+
+                @if (!_hasSearched)
+                {
+                    <MudAlert Severity="Severity.Info" Dense="true">
+                        Pulsa "Buscar dispositivos" para ver las impresoras emparejadas.
+                    </MudAlert>
+                }
+                else if (_devices.Count == 0)
+                {
+                    <MudAlert Severity="Severity.Warning" Dense="true">
+                        No se encontraron dispositivos. Asegúrate de que la impresora esté encendida y emparejada en Ajustes.
+                    </MudAlert>
+                }
+                else
+                {
+                    <MudRadioGroup @bind-Value="_selectedAddress">
+                        @foreach (var d in _devices)
+                        {
+                            <MudRadio Value="@d.Address" Color="Color.Primary">
+                                <MudStack Spacing="0">
+                                    <MudText Typo="Typo.body1" Style="font-weight: 500;">@d.Name</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@d.Address</MudText>
+                                </MudStack>
+                            </MudRadio>
+                        }
+                    </MudRadioGroup>
+                }
+            </MudPaper>
+
+            @* ── 2. Tamaño de etiqueta ──────────────────────────────────── *@
+            <MudPaper Elevation="2" Class="pa-4 rounded-lg">
+                <MudText Typo="Typo.subtitle2" Style="font-weight: 600;" GutterBottom="true">
+                    2. Cinta instalada
+                </MudText>
+                <MudSelect @bind-Value="_labelSize"
+                           Label="Tamaño de etiqueta"
+                           Variant="Variant.Outlined"
+                           Dense="true">
+                    @foreach (var ls in _labelSizes)
+                    {
+                        <MudSelectItem Value="@ls.Key">@ls.Value</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudPaper>
+
+            @* ── 3. Imprimir ────────────────────────────────────────────── *@
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Size="Size.Large"
+                       FullWidth="true"
+                       StartIcon="@Icons.Material.Filled.Print"
+                       OnClick="PrintTestAsync"
+                       Disabled="@(string.IsNullOrEmpty(_selectedAddress) || _printing)">
+                @if (_printing)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                    <span>Imprimiendo...</span>
+                }
+                else
+                {
+                    <span>Imprimir etiqueta de prueba</span>
+                }
+            </MudButton>
+
+            @* ── Resultado ──────────────────────────────────────────────── *@
+            @if (!string.IsNullOrEmpty(_log))
+            {
+                <MudPaper Elevation="0" Class="pa-3 rounded"
+                          Style="background: #1e1e1e;">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-1">
+                        <MudIcon Icon="@(_lastSuccess ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Error)"
+                                 Style="@(_lastSuccess ? "color: #4ec9b0; font-size: 1rem;" : "color: #f48771; font-size: 1rem;")" />
+                        <MudText Typo="Typo.caption"
+                                 Style="@(_lastSuccess ? "color: #4ec9b0; font-weight: 600;" : "color: #f48771; font-weight: 600;")">
+                            @(_lastSuccess ? "Impresión exitosa" : "Error de impresión")
+                        </MudText>
+                    </MudStack>
+                    <MudText Typo="Typo.caption"
+                             Style="color: #d4d4d4; white-space: pre-wrap; word-break: break-all; font-family: monospace;">
+                        @_log
+                    </MudText>
+                </MudPaper>
+            }
+        }
+
+        @* ── Ir al login ─────────────────────────────────────────────── *@
+        <MudButton Variant="Variant.Text"
+                   Color="Color.Default"
+                   FullWidth="true"
+                   StartIcon="@Icons.Material.Filled.Login"
+                   Href="/login">
+            Ir al login
+        </MudButton>
+
+    </MudStack>
+</MudContainer>
+
+@code {
+    private List<PrinterDevice> _devices = [];
+    private string _selectedAddress = string.Empty;
+    private string _labelSize = "DieCutW62H100";
+    private bool _scanning;
+    private bool _printing;
+    private bool _hasSearched;
+    private string _log = string.Empty;
+    private bool _lastSuccess;
+
+    private static readonly Dictionary<string, string> _labelSizes = new()
+    {
+        ["DieCutW62H100"]  = "DK-11209  62×100 mm (die-cut)",
+        ["RollW62"]        = "DK-22205  62 mm continuo",
+        ["DieCutW103H164"] = "DK-11247  103×164 mm (die-cut)",
+        ["DieCutW62H29"]   = "DK-11218  62×29 mm (retorno envío)",
+        ["DieCutW62H60"]   = "DK-11221  62×60 mm (die-cut)",
+        ["DieCutW102H152"] = "DK-11241  102×152 mm (die-cut)",
+    };
+
+    private async Task RefreshDevices()
+    {
+        if (PrinterService is null) return;
+
+        var status = await Permissions.RequestAsync<Permissions.Bluetooth>();
+        if (status != PermissionStatus.Granted)
+        {
+            _hasSearched = true;
+            _devices = [];
+            Snackbar.Add(
+                "Permiso Bluetooth denegado. Ve a Ajustes → Apps → AppEtiquetado → Permisos.",
+                Severity.Error);
+            return;
+        }
+
+        _scanning = true;
+        _hasSearched = true;
+        _devices = PrinterService.GetPairedPrinters();
+        _scanning = false;
+    }
+
+    private async Task PrintTestAsync()
+    {
+        if (PrinterService is null || string.IsNullOrEmpty(_selectedAddress)) return;
+
+        var status = await Permissions.RequestAsync<Permissions.Bluetooth>();
+        if (status != PermissionStatus.Granted)
+        {
+            Snackbar.Add("Permiso Bluetooth denegado.", Severity.Error);
+            return;
+        }
+
+        _printing = true;
+        _log = string.Empty;
+        try
+        {
+            var result = await PrinterService.PrintTestAsync(_selectedAddress, _labelSize);
+            _lastSuccess = result.Success;
+            _log = result.Message;
+            Snackbar.Add(
+                result.Success ? "Impresión exitosa" : $"Error: {result.Message}",
+                result.Success ? Severity.Success : Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            _lastSuccess = false;
+            _log = $"Excepción: {ex.GetType().Name}: {ex.Message}";
+            Snackbar.Add($"Error inesperado: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _printing = false;
+        }
+    }
+}

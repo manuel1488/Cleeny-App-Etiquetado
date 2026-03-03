@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <!-- Fixes requeridos para el binding del Brother Print SDK (BrotherPrintLibrary.aar) -->
+  <!-- Fuente: https://support.brother.com/g/s/es/htmldoc/mobilesdk/guide/getting-started/getting-started-cross-platform.html -->
+
+  <!-- Conflictos de nombres en PrinterInfo (SDK legacy com.brother.ptouch.sdk) -->
+  <attr path="/api/package[@name='com.brother.ptouch.sdk']/class[@name='PrinterInfo']/field[@name='align']"
+        name="managedName">EsAlign</attr>
+  <attr path="/api/package[@name='com.brother.ptouch.sdk']/class[@name='PrinterInfo']/field[@name='checkPrintEnd']"
+        name="managedName">EsCheckPrintEnd</attr>
+  <attr path="/api/package[@name='com.brother.ptouch.sdk']/class[@name='PrinterInfo']/field[@name='halftone']"
+        name="managedName">EsHalftone</attr>
+  <attr path="/api/package[@name='com.brother.ptouch.sdk']/class[@name='PrinterInfo']/field[@name='margin']"
+        name="managedName">EsMargin</attr>
+  <attr path="/api/package[@name='com.brother.ptouch.sdk']/class[@name='PrinterInfo']/field[@name='orientation']"
+        name="managedName">EsOrientation</attr>
+  <attr path="/api/package[@name='com.brother.ptouch.sdk']/class[@name='PrinterInfo']/field[@name='paperSize']"
+        name="managedName">EsPaperSize</attr>
+  <attr path="/api/package[@name='com.brother.ptouch.sdk']/class[@name='PrinterInfo']/field[@name='pjFeedMode']"
+        name="managedName">EsPjFeedMode</attr>
+  <attr path="/api/package[@name='com.brother.ptouch.sdk']/class[@name='PrinterInfo']/field[@name='port']"
+        name="managedName">EsPort</attr>
+  <attr path="/api/package[@name='com.brother.ptouch.sdk']/class[@name='PrinterInfo']/field[@name='printMode']"
+        name="managedName">EsPrintMode</attr>
+  <attr path="/api/package[@name='com.brother.ptouch.sdk']/class[@name='PrinterInfo']/field[@name='printQuality']"
+        name="managedName">EsPrintQuality</attr>
+  <attr path="/api/package[@name='com.brother.ptouch.sdk']/class[@name='PrinterInfo']/field[@name='pjPaperKind']"
+        name="managedName">EsPjPaperKind</attr>
+
+  <!--
+    Fix CS0535: IPrintImageSettings declara getHalftone/setHalftone/getPrintQuality/
+    setPrintQuality/getScaleMode/setScaleMode como métodos de interfaz, pero las clases
+    concretas (QLPrintSettings, etc.) los exponen como propiedades C# (Halftone, PrintQuality,
+    ScaleMode). C# no puede satisfacer métodos de interfaz con propiedades.
+    Solución: eliminar esos 6 métodos de la interfaz con remove-node.
+    Las clases concretas siguen exponiendo las propiedades sin restricción de interfaz.
+  -->
+  <remove-node path="/api/package[@name='com.brother.sdk.lmprinter.setting']/interface[@name='PrintImageSettings']/method[@name='getHalftone']" />
+  <remove-node path="/api/package[@name='com.brother.sdk.lmprinter.setting']/interface[@name='PrintImageSettings']/method[@name='setHalftone']" />
+  <remove-node path="/api/package[@name='com.brother.sdk.lmprinter.setting']/interface[@name='PrintImageSettings']/method[@name='getPrintQuality']" />
+  <remove-node path="/api/package[@name='com.brother.sdk.lmprinter.setting']/interface[@name='PrintImageSettings']/method[@name='setPrintQuality']" />
+  <remove-node path="/api/package[@name='com.brother.sdk.lmprinter.setting']/interface[@name='PrintImageSettings']/method[@name='getScaleMode']" />
+  <remove-node path="/api/package[@name='com.brother.sdk.lmprinter.setting']/interface[@name='PrintImageSettings']/method[@name='setScaleMode']" />
+
+  <!-- Fix CS0249: ProgressTask.finalize() genera 'override Finalize()' que C# no permite -->
+  <remove-node path="/api/package[@name='com.brother.ptouch.sdk']/class[@name='ProgressTask']/method[@name='finalize' and count(parameter)=0]" />
+
+  <!-- Corrige tipo de retorno para TemplateObjectReplacer.Creator (SDK nuevo) -->
+  <attr path="/api/package[@name='com.brother.sdk.lmprinter']/class[@name='TemplateObjectReplacer.Creator']/method[@name='createFromParcel' and count(parameter)=1 and parameter[1][@type='android.os.Parcel']]"
+        name="managedReturn">Java.Lang.Object</attr>
+  <attr path="/api/package[@name='com.brother.sdk.lmprinter']/class[@name='TemplateObjectReplacer.Creator']/method[@name='newArray' and count(parameter)=1 and parameter[1][@type='int']]"
+        name="managedReturn">Java.Lang.Object[]</attr>
+</metadata>

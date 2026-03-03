@@ -23,6 +23,29 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Primary: `#1A6868` (teal) | Secondary: `#7B3FA0` (purple)
 - Font: Poppins (headings), Roboto (body)
 
+## Brother Print SDK (Android)
+
+**SDK versión:** 4.13.0 (`BrotherPrintLibrary.aar`)
+**AAR ubicación en proyecto:** `AppEtiquetado/Platforms/Android/libs/BrotherPrintLibrary.aar`
+**Fuente original:** `C:\Users\Manuel Alfaro\Downloads\bpsdkaall4130\bpsdkaall4130\bpsdka4130\bpsdka4130\libs\`
+
+El AAR se incluye vía `<AndroidLibrary>` en el `.csproj` (solo para `net10.0-android`). Las transformaciones de binding están en `Transforms/Metadata.xml`.
+
+**Clases clave** (namespace C#: `Com.Brother.Sdk.Lmprinter`):
+- `Channel.NewBluetoothChannel(address, adapter)` — conexión BT clásica
+- `Channel.NewBluetoothLowEnergyChannel(address, context, adapter)` — BLE
+- `PrinterDriverGenerator.OpenChannel(channel)` → `PrinterDriverGenerateResult`
+- `QLPrintSettings(PrinterModel.QL_1110NWB)` — settings para QL-1110NWB
+- `driver.PrintImage(bitmap, settings)` → `PrintError`
+
+**Advertencia:** Los nombres de enum generados por el binding pueden diferir. Verificar al compilar:
+- `PrinterModel.QL_1110NWB`
+- `QLPrintSettings.LabelSize.DK_62X100` (ajustar según cinta instalada)
+- `OpenChannelError.ErrorCode.NoError`
+- `PrintError.ErrorCode.NoError`
+
+**Página de test:** `/printer-test` (sin autenticación, usa `BlankLayout`)
+
 ## VS Code
 
 Extensiones requeridas (en `.vscode/extensions.json`): **ms-dotnettools.dotnet-maui**, **ms-dotnettools.csdevkit**, **ms-dotnettools.csharp**.

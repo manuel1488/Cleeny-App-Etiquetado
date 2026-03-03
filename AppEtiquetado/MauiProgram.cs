@@ -1,6 +1,10 @@
 using Microsoft.Extensions.Logging;
+using MudBlazor;
 using MudBlazor.Services;
 using AppEtiquetado.Services;
+#if ANDROID
+using AppEtiquetado.Platforms.Android;
+#endif
 
 namespace AppEtiquetado;
 
@@ -30,6 +34,11 @@ public static class MauiProgram
         builder.Services.AddSingleton<AppApiService>();
         builder.Services.AddSingleton<AuthService>();
         builder.Services.AddSingleton<LabelService>();
+
+        // Impresora Brother (solo Android)
+#if ANDROID
+        builder.Services.AddSingleton<IBrotherPrinterService, BrotherPrinterService>();
+#endif
 
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();

@@ -36,6 +36,12 @@
     <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
+  <!-- Brother Print SDK (Android) -->
+  <ItemGroup Condition="$(TargetFramework.StartsWith('net10.0-android'))">
+    <AndroidLibrary Include="Platforms\Android\libs\BrotherPrintLibrary.aar" />
+    <TransformFile Include="Transforms\Metadata.xml" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="$(MauiVersion)" />
