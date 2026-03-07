@@ -119,9 +119,8 @@
 
     protected override void OnInitialized()
     {
-        // TODO: restore auth check when login flow is enabled
-        // if (!AuthService.IsAuthenticated)
-        //     Navigation.NavigateTo("/login", replace: true);
+        if (!AuthService.IsAuthenticated)
+            Navigation.NavigateTo("/login", replace: true);
     }
 
     private async Task OnProductChanged(ProductDto? product)

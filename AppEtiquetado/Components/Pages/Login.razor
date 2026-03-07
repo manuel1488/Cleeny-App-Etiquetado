@@ -32,22 +32,13 @@
 
         <MudStack Spacing="3">
 
-            <MudTextField @bind-Value="_serverUrl"
-                          Label="URL del servidor"
-                          Variant="Variant.Outlined"
-                          Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.Dns"
-                          Placeholder="https://192.168.1.x:7155"
-                          HelperText="Dirección del servidor Cleeny en la red local"
-                          Disabled="@_loading"
-                          AutoFocus="true" />
-
             <MudTextField @bind-Value="_username"
                           Label="Usuario"
                           Variant="Variant.Outlined"
                           Adornment="Adornment.Start"
                           AdornmentIcon="@Icons.Material.Filled.Person"
-                          Disabled="@_loading" />
+                          Disabled="@_loading"
+                          AutoFocus="true" />
 
             <MudTextField @bind-Value="_password"
                           Label="Contraseña"
@@ -78,8 +69,66 @@
             </MudButton>
 
         </MudStack>
+
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.Center"
+                  Class="mt-5" Spacing="1">
+            <MudIconButton Icon="@Icons.Material.Outlined.Settings"
+                           Size="Size.Small"
+                           Color="Color.Default"
+                           OnClick="@(() => _showServerSettings = true)"
+                           title="Configurar servidor" />
+            <MudText Typo="Typo.caption" Style="color: var(--mud-palette-text-secondary);">
+                @ServerHost
+            </MudText>
+        </MudStack>
+
     </MudPaper>
 </MudContainer>
+
+@if (_showServerSettings)
+{
+    <MudOverlay Visible="true" DarkBackground="true" ZIndex="10"
+                OnClick="@(() => _showServerSettings = false)" />
+    <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                z-index: 11; width: min(90vw, 380px);">
+        <MudPaper Elevation="8" Class="pa-6 rounded-lg">
+            <MudStack Spacing="3">
+
+                <MudStack Row="true" AlignItems="AlignItems.Center"
+                          Justify="Justify.SpaceBetween">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                        <MudIcon Icon="@Icons.Material.Outlined.Dns"
+                                 Style="color: #1A6868; font-size: 1.2rem;" />
+                        <MudText Typo="Typo.subtitle1" Style="font-weight: 600;">
+                            Servidor
+                        </MudText>
+                    </MudStack>
+                    <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                   Size="Size.Small"
+                                   OnClick="@(() => _showServerSettings = false)"
+                                   title="Cerrar" />
+                </MudStack>
+
+                <MudTextField @bind-Value="_serverUrl"
+                              Label="URL del servidor"
+                              Variant="Variant.Outlined"
+                              Placeholder="https://sistema.cleeny.com.mx"
+                              HelperText="Dirección del servidor Cleeny"
+                              Margin="Margin.Dense"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Outlined.Link" />
+
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           FullWidth="true"
+                           OnClick="@(() => _showServerSettings = false)">
+                    Listo
+                </MudButton>
+
+            </MudStack>
+        </MudPaper>
+    </div>
+}
 
 @code {
     private string _serverUrl = string.Empty;
@@ -88,6 +137,16 @@
     private string _error = string.Empty;
     private bool _loading;
     private bool _showPassword;
+    private bool _showServerSettings;
+
+    private string ServerHost
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(_serverUrl)) return "sin servidor";
+            return Uri.TryCreate(_serverUrl, UriKind.Absolute, out var uri) ? uri.Host : _serverUrl;
+        }
+    }
 
     private bool CanSubmit =>
         !string.IsNullOrWhiteSpace(_serverUrl) &&

@@ -14,7 +14,7 @@ public class AuthService
     public AuthService(AppApiService api)
     {
         _api = api;
-        ServerUrl = Preferences.Get("server_url", string.Empty);
+        ServerUrl = Preferences.Get("server_url", "https://sistema.cleeny.com.mx");
         if (!string.IsNullOrEmpty(ServerUrl))
             _api.SetBaseUrl(ServerUrl);
     }

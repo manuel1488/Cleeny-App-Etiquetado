@@ -2,6 +2,7 @@
 @inject AuthService AuthService
 @inject AppApiService ApiService
 @inject ISnackbar Snackbar
+@inject NavigationManager Navigation
 
 <PageTitle>Configuración — @AppConfig.AppName</PageTitle>
 
@@ -77,8 +78,8 @@
 
     protected override void OnInitialized()
     {
-        // TODO: restore auth check when login flow is enabled
-        // if (!AuthService.IsAuthenticated) Navigation.NavigateTo("/login", replace: true);
+        if (!AuthService.IsAuthenticated)
+            Navigation.NavigateTo("/login", replace: true);
         _serverUrl = AuthService.ServerUrl;
     }
 

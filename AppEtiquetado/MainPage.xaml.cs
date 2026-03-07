@@ -5,7 +5,7 @@
         public MainPage()
         {
             InitializeComponent();
-            blazorWebView.StartPath = "/etiquetado";
+            blazorWebView.StartPath = "/login";
 
 #if ANDROID
             // On Android (API 35+ enforces edge-to-edge), push the WebView below
