@@ -47,7 +47,14 @@ public class LabelService
     public async Task<BulkLabelJobDto> CreateLabelJobAsync(CreateBulkLabelJobDto dto, CancellationToken ct = default)
     {
         var response = await _api.Client.PostAsJsonAsync("/api/labels/bulk", dto, _jsonOptions, ct);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync(ct);
+            throw new HttpRequestException(
+                $"HTTP {(int)response.StatusCode} — {body}",
+                null,
+                response.StatusCode);
+        }
         return (await response.Content.ReadFromJsonAsync<BulkLabelJobDto>(_jsonOptions, ct))!;
     }
 
