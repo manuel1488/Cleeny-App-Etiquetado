@@ -1,3 +1,5 @@
+using AppEtiquetado.Models;
+
 namespace AppEtiquetado.Services;
 
 public interface IBrotherPrinterService
@@ -12,6 +14,17 @@ public interface IBrotherPrinterService
     /// Prints a test label on the printer at the given address.
     /// </summary>
     Task<PrintResult> PrintTestAsync(
+        string address,
+        string labelSize = "DieCutW62H100",
+        int labelHeightMm = 50,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Generates a product label bitmap from job data and sends it to the printer.
+    /// Barcode format: {ProductCode}|{Quantity×1000:D6}|{TotalPrice×100}
+    /// </summary>
+    Task<PrintResult> PrintLabelAsync(
+        BulkLabelJobDto job,
         string address,
         string labelSize = "DieCutW62H100",
         int labelHeightMm = 50,

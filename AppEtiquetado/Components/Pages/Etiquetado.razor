@@ -3,6 +3,7 @@
 @inject LabelService LabelService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@inject IServiceProvider Services
 
 <PageTitle>Etiquetado — @AppConfig.AppName</PageTitle>
 
@@ -113,6 +114,7 @@
     private decimal _quantity;
     private bool _printing;
     private MudNumericField<decimal>? _quantityField;
+    private IBrotherPrinterService? _printer;
 
     private decimal TotalPrice => Math.Round((_product?.Price ?? 0m) * _quantity, 2);
     private bool CanPrint => _product is not null && _quantity > 0;
@@ -120,7 +122,11 @@
     protected override void OnInitialized()
     {
         if (!AuthService.IsAuthenticated)
+        {
             Navigation.NavigateTo("/login", replace: true);
+            return;
+        }
+        _printer = Services.GetService<IBrotherPrinterService>();
     }
 
     private async Task OnProductChanged(ProductDto? product)
@@ -164,11 +170,33 @@
             };
 
             var job = await LabelService.CreateLabelJobAsync(dto);
-            var pdfUrl = LabelService.GetPdfUrl(job.Id);
 
-            await Launcher.OpenAsync(new Uri(pdfUrl));
-            Snackbar.Add($"Etiqueta generada: {job.ProductName}", Severity.Success);
-            Reset();
+            if (_printer is null)
+            {
+                Snackbar.Add("No hay impresora disponible en esta plataforma.", Severity.Warning);
+                return;
+            }
+
+            var address = Preferences.Get("printer_address", string.Empty);
+            if (string.IsNullOrEmpty(address))
+            {
+                Snackbar.Add("No hay impresora configurada. Ve a Impresora.", Severity.Warning);
+                return;
+            }
+
+            var labelSize   = Preferences.Get("label_size",      "DieCutW62H100");
+            var labelHeight = Preferences.Get("label_height_mm", 50);
+            var result = await _printer.PrintLabelAsync(job, address, labelSize, labelHeight);
+
+            if (result.Success)
+            {
+                Snackbar.Add($"Impreso: {job.ProductName}", Severity.Success);
+                Reset();
+            }
+            else
+            {
+                Snackbar.Add($"Error al imprimir: {result.Message}", Severity.Error);
+            }
         }
         catch (Exception ex)
         {
