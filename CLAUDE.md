@@ -71,6 +71,24 @@ dotnet publish -f net10.0-android
 
 The active development target in `.csproj.user` is `net10.0-android` with an Android emulator (Pixel 7 - API 35).
 
+### REQUIRED: Clean build after adding/removing Android packages
+
+**Trigger:** Any time you add, remove, or update a NuGet package or `.aar` library that contributes Android resources (e.g. MudBlazor, BrotherPrintLibrary, any `<AndroidLibrary>`).
+
+**Symptom if skipped:** App crashes immediately on Android with:
+```
+java.lang.IllegalArgumentException: No view found for id 0x7f0800f8 (jumpToStart)
+for fragment NavigationRootManager_ElementBasedFragment
+```
+
+**Root cause:** Incremental builds do not regenerate `_Microsoft.Android.Resource.Designer.dll` when resource IDs shift. MAUI's `NavigationRootManager` uses `Id.navigationlayout_content` from that DLL to attach the navigation fragment — if it has stale IDs, it points to the wrong container and Android crashes.
+
+**Fix — run once after every package change:**
+```bash
+dotnet build -f net10.0-android --no-incremental -p:EmbedAssembliesIntoApk=true
+```
+Then uninstall the app from the device/emulator and do a fresh install of the new APK. Subsequent incremental builds are fine until the next package change.
+
 ## Architecture
 
 ### Hybrid App Model

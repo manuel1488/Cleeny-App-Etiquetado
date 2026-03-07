@@ -33,8 +33,11 @@
                                      Clearable="true"
                                      DebounceInterval="300"
                                      MinCharacters="2"
-                                     NoItemsFoundText="Sin resultados"
-                                     Margin="Margin.Dense" />
+                                     Margin="Margin.Dense">
+                        <NoItemsTemplate>
+                            <MudText Class="px-4 py-1" Typo="Typo.body2">Sin resultados</MudText>
+                        </NoItemsTemplate>
+                    </MudAutocomplete>
 
                     @if (_product is not null)
                     {

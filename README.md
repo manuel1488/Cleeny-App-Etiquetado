@@ -53,6 +53,22 @@ dotnet build -f net10.0-windows10.0.19041.0
 dotnet build -f net10.0-ios
 ```
 
+### Build limpio obligatorio tras cambiar paquetes Android
+
+Cada vez que se agrega, elimina o actualiza un paquete NuGet o librería `.aar` (MudBlazor, BrotherPrintLibrary, etc.), el **primer build debe ser no-incremental**:
+
+```bash
+dotnet build -f net10.0-android --no-incremental -p:EmbedAssembliesIntoApk=true
+```
+
+Luego desinstalar la app del dispositivo/emulador y hacer una instalación limpia del APK generado.
+
+**¿Por qué?** Los paquetes con recursos Android cambian los IDs de recursos al agregarse. El build incremental reutiliza el `_Microsoft.Android.Resource.Designer.dll` cacheado con IDs anteriores. Con IDs incorrectos, MAUI no encuentra el contenedor de navegación en el layout de Android y la app crashea al iniciar con:
+```
+IllegalArgumentException: No view found for id 0x7f0800f8 (jumpToStart)
+```
+El flag `--no-incremental` fuerza la regeneración del DLL con los IDs correctos. Los builds incrementales siguientes funcionan con normalidad hasta el próximo cambio de paquetes.
+
 ## Estructura
 
 ```
@@ -75,5 +91,5 @@ AppEtiquetado/
 ## Tecnologías
 
 - .NET 10 MAUI + Blazor Hybrid
-- MudBlazor 8.x (mismo stack visual que Cleeny)
+- MudBlazor 9.x (mismo stack visual que Cleeny)
 - Cookie-based auth (espejo de ASP.NET Core Identity de Cleeny)

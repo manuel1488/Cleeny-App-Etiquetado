@@ -88,8 +88,7 @@
                 <MudStack Spacing="3">
                     <MudSelect T="string" Value="_labelSize" ValueChanged="OnLabelSizeChanged"
                                Label="Tamaño de etiqueta"
-                               Variant="Variant.Outlined"
-                               Dense="true">
+                               Variant="Variant.Outlined">
                         @foreach (var ls in _labelSizes)
                         {
                             <MudSelectItem Value="@ls.Key">@ls.Value</MudSelectItem>
@@ -100,7 +99,6 @@
                                      ValueChanged="OnHeightChanged"
                                      Label="Altura de etiqueta (mm)"
                                      Variant="Variant.Outlined"
-                                     Dense="true"
                                      Min="30"
                                      Max="300"
                                      Step="5"
