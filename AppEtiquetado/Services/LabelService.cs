@@ -22,7 +22,7 @@ public class LabelService
     /// </summary>
     public async Task<List<ProductDto>> SearchProductsAsync(string search, CancellationToken ct = default)
     {
-        var url = $"/api/products?search={Uri.EscapeDataString(search)}&pageSize=20&isActive=true";
+        var url = $"/api/products?search={Uri.EscapeDataString(search)}&pageSize=20&isActive=true&isPartialSaleAllowed=true";
         var response = await _api.Client.GetAsync(url, ct);
         response.EnsureSuccessStatusCode();
 
