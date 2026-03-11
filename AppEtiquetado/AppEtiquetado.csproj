@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>net10.0-android</TargetFrameworks>
-    <TargetFrameworks Condition="!$([MSBuild]::IsOSPlatform('linux'))">$(TargetFrameworks);net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('osx'))">$(TargetFrameworks);net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
     <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
 
     <OutputType>Exe</OutputType>
@@ -14,7 +14,7 @@
     <Nullable>enable</Nullable>
     <MauiXamlInflator>SourceGen</MauiXamlInflator>
 
-    <ApplicationTitle>Cleeny</ApplicationTitle>
+    <ApplicationTitle>Cleeny Etiquetas</ApplicationTitle>
     <ApplicationId>com.companyname.appetiquetado</ApplicationId>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <ApplicationVersion>1</ApplicationVersion>
@@ -28,8 +28,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <MauiIcon Include="Resources\AppIcon\appicon.jpg" Color="#1A6868" />
-    <MauiSplashScreen Include="Resources\Splash\splash.jpg" Color="#FFFFFF" BaseSize="900,322" />
+    <MauiIcon Include="Resources\AppIcon\appicon.jpg" Color="#FFFFFF" />
+    <MauiSplashScreen Include="Resources\Splash\splash.jpg" Color="#FFFFFF" BaseSize="512,512" />
     <MauiImage Include="Resources\Images\*" />
     <MauiImage Update="Resources\Images\dotnet_bot.svg" BaseSize="168,208" />
     <MauiFont Include="Resources\Fonts\*" />
