@@ -11,6 +11,7 @@ public class ProductDto
     public string UnitMeasureName { get; set; } = string.Empty;
     public string UnitMeasureCode { get; set; } = string.Empty;
     public decimal Price { get; set; }
+    public bool IsTaxable { get; set; }
     public bool IsPartialSaleAllowed { get; set; }
     public bool AllowCustomPricing { get; set; }
     public bool IsActive { get; set; }

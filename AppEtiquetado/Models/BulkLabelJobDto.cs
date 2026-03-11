@@ -10,6 +10,8 @@ public class BulkLabelJobDto
     public string UnitMeasureCode { get; set; } = string.Empty;
     public decimal UnitPrice { get; set; }
     public decimal TotalPrice { get; set; }
+    public decimal TaxRate { get; set; }
+    public decimal TaxAmount { get; set; }
     public int LabelCount { get; set; }
     public string? BatchNumber { get; set; }
     public string? Notes { get; set; }

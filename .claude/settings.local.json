@@ -25,7 +25,9 @@
       "Bash(xargs wc:*)",
       "Bash(xargs sh:*)",
       "Bash(python3:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(grep -r \"qtyMillis\\\\|priceCents\\\\|ProductCode.*|\" --include=\"*.cs\" --include=\"*.razor\" 2>/dev/null | head -20)",
+      "Bash(grep -r \"tax\\\\|iva\\\\|taxRate\\\\|isTaxable\\\\|HasIva\" /c/repos/AppEtiquetado/AppEtiquetado --include=\"*.cs\" --include=\"*.razor\" -i 2>/dev/null | head -30)"
     ]
   }
 }

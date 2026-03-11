@@ -180,11 +180,14 @@ public class BrotherPrinterService : IBrotherPrinterService
         paint.Color = global::Android.Graphics.Color.DarkGray;
         canvas.DrawText(job.ProductCode, margin, (int)(H * 0.34f), paint);
 
-        // Quantity + unit + total price
+        // Quantity + unit + total price (with IVA if applicable)
         paint.TextSize = 44f;
         paint.Color = global::Android.Graphics.Color.Black;
+        var priceDisplay = job.TaxAmount > 0
+            ? $"${(job.TotalPrice + job.TaxAmount):0.00} c/IVA"
+            : $"${job.TotalPrice:0.00}";
         canvas.DrawText(
-            $"{job.Quantity:0.###} {job.UnitMeasureCode}   ${job.TotalPrice:0.00}",
+            $"{job.Quantity:0.###} {job.UnitMeasureCode}   {priceDisplay}",
             margin, (int)(H * 0.50f), paint);
 
         // Separator
@@ -213,7 +216,7 @@ public class BrotherPrinterService : IBrotherPrinterService
     {
         var qtyMillis = ((long)Math.Round(job.Quantity * 1000)).ToString("D6");
         var priceCents = ((long)Math.Round(job.TotalPrice * 100)).ToString();
-        var content = $"{job.ProductCode}|{qtyMillis}|{priceCents}";
+        var content = $"{job.ProductId}-{qtyMillis}-{priceCents}";
 
         var writer = new BarcodeWriterPixelData
         {

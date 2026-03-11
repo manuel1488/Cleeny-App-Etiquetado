@@ -23,7 +23,19 @@ public class AppApiService
     public void SetBaseUrl(string url)
     {
         _baseUrl = url.TrimEnd('/');
-        _client.BaseAddress = new Uri(_baseUrl + "/");
+        var newUri = new Uri(_baseUrl + "/");
+
+        try
+        {
+            _client.BaseAddress = newUri;
+        }
+        catch (InvalidOperationException)
+        {
+            // HttpClient already sent requests — recreate it preserving cookies
+            _client.Dispose();
+            _client = CreateClient(_cookieContainer);
+            _client.BaseAddress = newUri;
+        }
     }
 
     public void ResetCookies()
