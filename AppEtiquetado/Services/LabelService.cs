@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using AppEtiquetado.Models;
@@ -24,6 +25,7 @@ public class LabelService
     {
         var url = $"/api/products?search={Uri.EscapeDataString(search)}&pageSize=20&isActive=true&isPartialSaleAllowed=true";
         var response = await _api.Client.GetAsync(url, ct);
+        ThrowIfSessionExpired(response);
         response.EnsureSuccessStatusCode();
 
         var json = await response.Content.ReadAsStringAsync(ct);
@@ -47,6 +49,7 @@ public class LabelService
     public async Task<BulkLabelJobDto> CreateLabelJobAsync(CreateBulkLabelJobDto dto, CancellationToken ct = default)
     {
         var response = await _api.Client.PostAsJsonAsync("/api/labels/bulk", dto, _jsonOptions, ct);
+        ThrowIfSessionExpired(response);
         if (!response.IsSuccessStatusCode)
         {
             var body = await response.Content.ReadAsStringAsync(ct);
@@ -62,4 +65,13 @@ public class LabelService
     /// URL directa del PDF de la etiqueta para abrir en visor/impresora.
     /// </summary>
     public string GetPdfUrl(long jobId) => $"{_api.BaseUrl}/api/labels/bulk/{jobId}/pdf";
+
+    private static void ThrowIfSessionExpired(HttpResponseMessage response)
+    {
+        if (response.StatusCode is HttpStatusCode.Found
+                                or HttpStatusCode.Redirect
+                                or HttpStatusCode.MovedPermanently
+                                or HttpStatusCode.Unauthorized)
+            throw new UnauthorizedAccessException("Sesión expirada.");
+    }
 }

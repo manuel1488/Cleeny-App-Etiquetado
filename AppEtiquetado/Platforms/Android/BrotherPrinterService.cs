@@ -194,19 +194,22 @@ public class BrotherPrinterService : IBrotherPrinterService
         paint.StrokeWidth = 2f;
         canvas.DrawLine(margin, (int)(H * 0.55f), W - margin, (int)(H * 0.55f), paint);
 
-        // Barcode
+        // Barcode (leave 30px at the bottom for human-readable text)
+        const float textSizePx = 26f;
+        const int textBottomPadding = 8;
         int barcodeTop = (int)(H * 0.57f);
-        int barcodeH = (int)(H * 0.34f);
+        int barcodeH = H - barcodeTop - (int)textSizePx - textBottomPadding - margin;
         using var barcodeBmp = CreateBarcodeBitmap(job, W - 2 * margin, barcodeH);
         canvas.DrawBitmap(barcodeBmp, margin, barcodeTop, null);
 
-        // Human-readable barcode text
-        paint.TextSize = 20f;
-        paint.Color = global::Android.Graphics.Color.Gray;
+        // Human-readable barcode text (exact encoded content)
+        var qtyMillisLabel = ((long)Math.Round(job.Quantity * 1000)).ToString("D6");
+        var priceCentsLabel = ((long)Math.Round(job.TotalPrice * 100)).ToString();
+        var barcodeText = $"{job.ProductId}-{qtyMillisLabel}-{priceCentsLabel}";
+        paint.TextSize = textSizePx;
+        paint.Color = global::Android.Graphics.Color.DarkGray;
         paint.TextAlign = global::Android.Graphics.Paint.Align.Center;
-        canvas.DrawText(
-            $"{job.ProductCode} | {job.Quantity:0.###} {job.UnitMeasureCode} | ${job.TotalPrice:0.00}",
-            W / 2f, (int)(H * 0.96f), paint);
+        canvas.DrawText(barcodeText, W / 2f, H - textBottomPadding, paint);
 
         return bmp;
     }

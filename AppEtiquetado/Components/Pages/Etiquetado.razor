@@ -59,18 +59,28 @@
                                       ReadOnly="true"
                                       Margin="Margin.Dense" />
 
-                        <MudPaper Elevation="0" Class="pa-4 rounded"
+                        <MudPaper Elevation="0" Class="pa-3 rounded"
                                   Style="background-color: #e8f4f4;">
-                            <MudStack Row="true"
-                                      Justify="Justify.SpaceBetween"
-                                      AlignItems="AlignItems.Center">
-                                <MudText Typo="Typo.body1" Style="font-weight: 500;">
-                                    Total a cobrar
-                                </MudText>
-                                <MudText Typo="Typo.h5" Color="Color.Primary"
-                                         Style="font-family: Poppins, sans-serif; font-weight: 700;">
-                                    @TotalPrice.ToString("C2")
-                                </MudText>
+                            <MudStack Spacing="1">
+                                <MudStack Row="true" Justify="Justify.SpaceBetween">
+                                    <MudText Typo="Typo.body2" Color="Color.Default">Subtotal</MudText>
+                                    <MudText Typo="Typo.body2">@Subtotal.ToString("C2")</MudText>
+                                </MudStack>
+                                @if (_product.IsTaxable)
+                                {
+                                    <MudStack Row="true" Justify="Justify.SpaceBetween">
+                                        <MudText Typo="Typo.body2" Color="Color.Default">IVA (@((_product.TaxRate * 100).ToString("0.##"))%)</MudText>
+                                        <MudText Typo="Typo.body2">@TaxAmount.ToString("C2")</MudText>
+                                    </MudStack>
+                                }
+                                <MudDivider Class="my-1" />
+                                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                                    <MudText Typo="Typo.body1" Style="font-weight: 600;">Total</MudText>
+                                    <MudText Typo="Typo.h6" Color="Color.Primary"
+                                             Style="font-family: Poppins, sans-serif; font-weight: 700;">
+                                        @Total.ToString("C2")
+                                    </MudText>
+                                </MudStack>
                             </MudStack>
                         </MudPaper>
                     }
@@ -116,8 +126,10 @@
     private MudNumericField<decimal>? _quantityField;
     private IBrotherPrinterService? _printer;
 
-    private decimal TotalPrice => Math.Round((_product?.Price ?? 0m) * _quantity, 2);
-    private bool CanPrint => _product is not null && _quantity > 0;
+    private decimal Subtotal => Math.Round((_product?.Price ?? 0m) * _quantity, 2);
+    private decimal TaxAmount => Math.Round(Subtotal * (_product?.TaxRate ?? 0m), 2);
+    private decimal Total => Subtotal + TaxAmount;
+    private bool CanPrint => _product is not null && _quantity > 0 && Subtotal > 0;
 
     protected override void OnInitialized()
     {
@@ -145,6 +157,15 @@
         {
             return await LabelService.SearchProductsAsync(value, ct);
         }
+        catch (OperationCanceledException)
+        {
+            return [];
+        }
+        catch (UnauthorizedAccessException)
+        {
+            await HandleSessionExpiredAsync();
+            return [];
+        }
         catch (Exception ex)
         {
             Snackbar.Add($"Error al buscar: {ex.Message}", Severity.Warning);
@@ -165,7 +186,7 @@
                 Quantity = _quantity,
                 UnitMeasureCode = _product.UnitMeasureCode,
                 UnitPrice = _product.Price,
-                TotalPrice = TotalPrice,
+                TotalPrice = Subtotal,
                 LabelCount = 1,
             };
 
@@ -198,6 +219,10 @@
                 Snackbar.Add($"Error al imprimir: {result.Message}", Severity.Error);
             }
         }
+        catch (UnauthorizedAccessException)
+        {
+            await HandleSessionExpiredAsync();
+        }
         catch (Exception ex)
         {
             Snackbar.Add($"Error al generar etiqueta: {ex.Message}", Severity.Error);
@@ -206,6 +231,13 @@
         {
             _printing = false;
         }
+    }
+
+    private async Task HandleSessionExpiredAsync()
+    {
+        await AuthService.LogoutAsync();
+        Snackbar.Add("Sesión expirada. Inicia sesión nuevamente.", Severity.Warning);
+        Navigation.NavigateTo("/login", replace: true);
     }
 
     private void Reset()
