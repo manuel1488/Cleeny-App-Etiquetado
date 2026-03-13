@@ -16,6 +16,7 @@ public class ProductDto
     public bool IsPartialSaleAllowed { get; set; }
     public bool AllowCustomPricing { get; set; }
     public bool IsActive { get; set; }
+    public List<ProductWholesalePriceDto> WholesalePrices { get; set; } = [];
 
     public override string ToString() => $"{Code} - {Name}";
 }

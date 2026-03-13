@@ -53,11 +53,27 @@
                                          AdornmentText="@_product.UnitMeasureCode"
                                          Margin="Margin.Dense" />
 
-                        <MudTextField Value="@_product.Price.ToString("C2")"
-                                      Label="Precio unitario"
-                                      Variant="Variant.Outlined"
-                                      ReadOnly="true"
-                                      Margin="Margin.Dense" />
+                        @if (HasWholesaleDiscount)
+                        {
+                            <MudStack Spacing="0">
+                                <MudChip T="string" Size="Size.Small" Color="Color.Success" Class="mb-1">
+                                    Mayoreo $@EffectiveUnitPrice.ToString("N2")
+                                </MudChip>
+                                <MudTextField Value="@($"{_product.Price:C2} → {EffectiveUnitPrice:C2}")"
+                                              Label="Precio unitario"
+                                              Variant="Variant.Outlined"
+                                              ReadOnly="true"
+                                              Margin="Margin.Dense" />
+                            </MudStack>
+                        }
+                        else
+                        {
+                            <MudTextField Value="@_product.Price.ToString("C2")"
+                                          Label="Precio unitario"
+                                          Variant="Variant.Outlined"
+                                          ReadOnly="true"
+                                          Margin="Margin.Dense" />
+                        }
 
                         <MudPaper Elevation="0" Class="pa-3 rounded"
                                   Style="background-color: #e8f4f4;">
@@ -126,7 +142,24 @@
     private MudNumericField<decimal>? _quantityField;
     private IBrotherPrinterService? _printer;
 
-    private decimal Subtotal => Math.Round((_product?.Price ?? 0m) * _quantity, 2);
+    private decimal EffectiveUnitPrice
+    {
+        get
+        {
+            if (_product is null) return 0m;
+            var applicable = _product.WholesalePrices
+                .Where(w => w.IsActive && _quantity >= w.MinQuantity)
+                .Where(w => w.FixedPrice is > 0 || w.DiscountPercentage > 0)
+                .OrderByDescending(w => w.MinQuantity)
+                .FirstOrDefault();
+            if (applicable is null) return _product.Price;
+            return applicable.FixedPrice is > 0
+                ? applicable.FixedPrice.Value
+                : Math.Round(_product.Price * (1 - applicable.DiscountPercentage / 100), 4);
+        }
+    }
+    private bool HasWholesaleDiscount => EffectiveUnitPrice < (_product?.Price ?? 0m);
+    private decimal Subtotal => Math.Round(EffectiveUnitPrice * _quantity, 2);
     private decimal TaxAmount => Math.Round(Subtotal * (_product?.TaxRate ?? 0m), 2);
     private decimal Total => Subtotal + TaxAmount;
     private bool CanPrint => _product is not null && _quantity > 0 && Subtotal > 0;
@@ -185,7 +218,7 @@
                 ProductId = _product.Id,
                 Quantity = _quantity,
                 UnitMeasureCode = _product.UnitMeasureCode,
-                UnitPrice = _product.Price,
+                UnitPrice = EffectiveUnitPrice,
                 TotalPrice = Subtotal,
                 LabelCount = 1,
             };
